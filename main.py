@@ -5,6 +5,17 @@ import time
 
 from kubernetes import client, config
 
+class Config:
+    def __init__(self):
+        self.apihost = os.getenv("DATAPLANE_API_HOST")
+        self.passwd = os.getenv("DATAPLANE_PASSWORD")
+        self.cluster = os.getenv("DATAPLANE_CLUSTER")
+        self.home = os.getenv("HOME")
+        self.base = f"{self.apihost}/v3/services/haproxy/configuration"
+        self.auth = ("admin", self.passwd)
+
+cfg = Config()
+
 def error(msg, resp):
     if resp.status_code not in (200, 201, 202):
         print(f'{msg} {resp.status_code} {resp.content.decode("utf-8")}')
@@ -35,38 +46,31 @@ def get_ip_addresses(cpnodes):
     return addresses
 
 def remove_redundant_nodes(cpnodes, addresses):
-    resp=requests.get(f"{base}/version", auth=("admin", passwd))
+    resp=requests.get(f"{cfg.base}/version", auth=cfg.auth)
     error('error getting version:', resp)
 
     version=int(resp.content.decode('utf-8'))
 
-    resp = requests.get(f"{base}/backends/{cluster}/servers", auth=("admin", passwd))
+    resp = requests.get(f"{cfg.base}/backends/{cfg.cluster}/servers", auth=cfg.auth)
 
     if resp.status_code == 200:
         servers = json.loads(resp.content)
         while len(servers) > len(cpnodes):
             srv = servers[-1]['name']
             print(f'deleting server {srv}')
-            resp = requests.delete(f"{base}/backends/{cluster}/servers/{srv}?version={version}", headers={"Content-Type": "application/json"}, auth=("admin", passwd))
+            resp = requests.delete(f"{cfg.base}/backends/{cfg.cluster}/servers/{srv}?version={version}", headers={"Content-Type": "application/json"}, auth=cfg.auth)
 
             error(f'error deleting server {srv}:', resp)
 
             servers.pop()
 
-passwd = os.getenv("DATAPLANE_PASSWORD")
-apihost = os.getenv("DATAPLANE_API_HOST")
-cluster = os.getenv("DATAPLANE_CLUSTER")
-home = os.getenv("HOME")
-
-base = f"{apihost}/v3/services/haproxy/configuration"
-
 print("[***] starting dataplaneapi backend server updater")
-print(f"[***] host {apihost} cluster {cluster}")
+print(f"[***] host {cfg.apihost} cluster {cfg.cluster}")
 
 try:
     config.load_incluster_config()    
 except:
-    config.load_kube_config(config_file=f"{home}/.kube/config")
+    config.load_kube_config(config_file=f"{cfg.home}/.kube/config")
 
 while True:
     v1 = client.CoreV1Api()
@@ -82,7 +86,7 @@ while True:
 
     try:
         for i, address_in_k8s in enumerate(addresses):
-            resp = requests.get(f"{base}/backends/{cluster}/servers/controlplane-{i+1}", auth=("admin", passwd))
+            resp = requests.get(f"{cfg.base}/backends/{cfg.cluster}/servers/controlplane-{i+1}", auth=cfg.auth)
 
             add = False
 
@@ -97,7 +101,7 @@ while True:
 
             address_in_haproxy = address_in_k8s
 
-            resp=requests.get(f"{base}/version", auth=("admin", passwd))
+            resp=requests.get(f"{cfg.base}/version", auth=cfg.auth)
             if resp.status_code != 200:
                 error('error getting version: ', resp)
                 continue
@@ -105,14 +109,14 @@ while True:
 
             if not add:
                 method = "PUT"
-                url = f"{base}/backends/{cluster}/servers/controlplane-{i+1}?version={version}"
+                url = f"{cfg.base}/backends/{cfg.cluster}/servers/controlplane-{i+1}?version={version}"
             else:
                 method = "POST"
-                url = f"{base}/backends/{cluster}/servers?version={version}"
+                url = f"{cfg.base}/backends/{cfg.cluster}/servers?version={version}"
 
             body = { "name": f"controlplane-{i+1}", "address": address_in_k8s, "port": 443, "check": "enabled", "ssl": "enabled", "fall": 3, "rise": 2, "verify": "none" }    
             
-            resp = requests.request(method, url, json=body, headers={"Content-Type": "application/json"}, auth=("admin", passwd))
+            resp = requests.request(method, url, json=body, headers={"Content-Type": "application/json"}, auth=cfg.auth)
             if resp.status_code == 200 or resp.status_code == 201:
                 print(f'added controlplane-{i+1} server {address_in_k8s}')
             else:
