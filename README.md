@@ -9,6 +9,7 @@
 
 Make sure to name the servers controlplane-1 to x
 
+```
 backend k8s-cluster
   mode http
   balance roundrobin
@@ -16,6 +17,7 @@ backend k8s-cluster
   server controlplane-1 192.168.130.28:443 check ssl fall 3 rise 2 verify none
   server controlplane-2 192.168.130.30:443 check ssl fall 3 rise 2 verify none
   server controlplane-3 192.168.130.31:443 check ssl fall 3 rise 2 verify none
+```
 
 ## Get all servers
 
