@@ -19,11 +19,11 @@ backend k8s-cluster
 
 ## Get all servers
 
-curl -sX GET --user admin:pw "http://localhost:5555/v3/services/haproxy/configuration/backends/k8s-cluster/servers"
+```curl -sX GET --user admin:pw "http://localhost:5555/v3/services/haproxy/configuration/backends/k8s-cluster/servers"```
 
 ## Get single server
 
-curl -sX GET   --user admin:pw   "http://localhost:5555/v3/services/haproxy/configuration/backends/k8s-cluster/servers/controlplane-1"
+```curl -sX GET   --user admin:pw   "http://localhost:5555/v3/services/haproxy/configuration/backends/k8s-cluster/servers/controlplane-1"
 {
   "check": "enabled",
   "fall": 3,
@@ -33,16 +33,17 @@ curl -sX GET   --user admin:pw   "http://localhost:5555/v3/services/haproxy/conf
   "address": "192.168.130.82",
   "name": "controlplane-1",
   "port": 443
-}
+}```
 
 ## Update the IP address
 
 Get current version first
-
+```
 CFGVER=$(curl -s -u admin:pw http://localhost:5555/v3/services/haproxy/configuration/version)
 
 curl -X PUT --user admin:pw "http://localhost:5555/v3/services/haproxy/configuration/backends/services-cluster/servers/controlplane-1?version=$CFGVER" 
      -H "Content-Type: application/json" 
      -d '{ "name": "controlplane-1", "address": "10.10.10.10" }'
+```
 
 {"address":"10.10.10.10","name":"controlplane-1"}
