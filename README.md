@@ -33,7 +33,8 @@ backend k8s-cluster
   "address": "192.168.130.82",
   "name": "controlplane-1",
   "port": 443
-}```
+}
+```
 
 ## Update the IP address
 
@@ -46,4 +47,4 @@ curl -X PUT --user admin:pw "http://localhost:5555/v3/services/haproxy/configura
      -d '{ "name": "controlplane-1", "address": "10.10.10.10" }'
 ```
 
-{"address":"10.10.10.10","name":"controlplane-1"}
+output: {"address":"10.10.10.10","name":"controlplane-1"}
