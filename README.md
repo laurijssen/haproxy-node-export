@@ -4,6 +4,8 @@
 * Configure backends
 * Install dataplaneapi
 * Translate curl to requests python
+* Build container
+* Run inside cluster with deployment yamls in this repo
 
 ## Backend configuration
 
