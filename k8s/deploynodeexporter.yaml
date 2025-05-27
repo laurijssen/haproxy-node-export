@@ -52,7 +52,7 @@ spec:
       serviceAccountName: list-nodes-sa
       containers:
       - name: nodeexporter
-        image: ghcr.io/fujifilmimagingproductsandsolutions/nodeexporter:1.0.0
+        image: ghcr.io/laurijssen/nodeexporter:1.0.0
         imagePullPolicy: Always
         envFrom:
         - secretRef:
