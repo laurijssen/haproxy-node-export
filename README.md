@@ -52,3 +52,21 @@ curl -X PUT --user admin:pw "http://localhost:5555/v3/services/haproxy/configura
 ```
 
 output: {"address":"10.10.10.10","name":"controlplane-1"}
+
+## Build container
+
+The container is a simple python:alpine with main.py copied into the image.
+Make sure to inject the environment variables DATAPLANE_* into the container
+
+```
+class Config:
+    def __init__(self):
+        self.base = []
+        self.apihosts = os.getenv("DATAPLANE_API_HOST").split(',')
+        self.passwd = os.getenv("DATAPLANE_PASSWORD")
+        self.cluster = os.getenv("DATAPLANE_CLUSTER")
+        self.home = os.getenv("HOME")
+        for host in self.apihosts:
+            self.base.append(f"{host}/v3/services/haproxy/configuration")
+        self.auth = ("admin", self.passwd)
+```
